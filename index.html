@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Vault">
+    <link rel="apple-touch-icon"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/svgs/solid/shield-halved.svg">
+    <title>Vault</title>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CryptoJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden">
+        <span id="toast-message">Message</span>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen active">
+        <div class="login-container glass-panel">
+            <div class="logo">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h1>Quick Notes</h1>
+            <p>Enter your master password to decrypt your data.</p>
+
+            <div id="file-selection-area" style="margin-bottom: 20px;">
+                <button type="button" id="btn-open-vault" class="btn btn-primary btn-block" style="margin-bottom: 15px;">
+                    <i class="fa-solid fa-folder-open"></i> Open Local Vault File
+                </button>
+                <button type="button" id="btn-create-vault" class="btn btn-secondary btn-block">
+                    <i class="fa-solid fa-file-circle-plus"></i> Create New Local Vault
+                </button>
+            </div>
+            
+            <form id="login-form" class="hidden">
+                <div class="input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="master-password" placeholder="Master Password" required>
+                </div>
+                <button type="submit" id="btn-unlock-text" class="btn btn-primary btn-block">Unlock Vault</button>
+                <button type="button" id="btn-cancel-login" class="btn btn-secondary btn-block" style="margin-top: 10px;">Cancel</button>
+            </form>
+            
+            <div class="login-actions">
+                <p class="helper-text" id="login-helper-text">Select or create a physical file on your device to continue.</p>
+                <p id="fallback-warning" class="hidden" style="color: var(--danger); font-size: 0.85rem; margin-top: 10px;">
+                    Your browser does not support local file writing. The app will fall back to browser storage.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Screen -->
+    <div id="app-screen" class="screen">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar glass-panel">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-shield-halved"></i>
+                <h2>Vault</h2>
+                <button id="btn-add-folder" class="btn-icon" style="margin-left: auto;" title="New Folder">
+                    <i class="fa-solid fa-folder-plus"></i>
+                </button>
+            </div>
+
+            <div class="nav-sections" id="sidebar-nav-sections">
+                <!-- Sections and folders will be dynamically injected here -->
+            </div>
+
+            <div class="sidebar-footer">
+                <button id="btn-add-new-item" class="btn btn-primary btn-block hidden" style="margin-bottom: 15px;">
+                    <i class="fa-solid fa-plus"></i> New Item
+                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-export" class="btn btn-secondary btn-sm" style="flex: 1;" title="Export">
+                        <i class="fa-solid fa-file-export"></i>
+                    </button>
+                    <button id="btn-import" class="btn btn-secondary btn-sm" style="flex: 1;" title="Import">
+                        <i class="fa-solid fa-file-import"></i>
+                    </button>
+                    <button id="btn-lock" class="btn btn-danger btn-sm" style="flex: 1;" title="Lock">
+                        <i class="fa-solid fa-lock"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="content-header">
+                <div class="header-top">
+                    <h1 id="current-folder-title">Select a Folder</h1>
+                    <div class="header-actions">
+                        <button id="btn-folder-options" class="btn btn-secondary hidden" title="Delete Folder">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="search-bar">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Search entries...">
+                </div>
+            </header>
+
+            <div class="items-container-wrapper">
+                <div class="list-container" id="items-container">
+                    <!-- List items will be dynamically injected here -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Details Pane -->
+        <aside class="details-pane" id="details-pane">
+            <div class="details-empty" id="details-empty-state">
+                <i class="fa-solid fa-shield-halved"></i>
+                <p>Select an item to view details</p>
+            </div>
+            
+            <div class="details-content hidden" id="details-content-state">
+                <header class="details-header">
+                    <div class="details-avatar-lg" id="details-avatar">H</div>
+                    <div class="details-title-area">
+                        <h2 id="details-title">Hulu</h2>
+                        <span class="details-tag" id="details-tag">Streaming</span>
+                    </div>
+                    <div class="details-actions">
+                        <button id="btn-edit-item" class="btn-icon"><i class="fa-solid fa-pen"></i></button>
+                        <button id="btn-delete-item" class="btn-icon text-danger"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </header>
+
+                <div class="details-body" id="details-body-view">
+                    <!-- View mode fields injected here -->
+                </div>
+
+                <div class="details-body hidden" id="details-body-edit">
+                    <form id="item-form">
+                        <input type="hidden" id="item-entry-index">
+                        
+                        <div class="form-group">
+                            <label for="entry-name">Item Name</label>
+                            <input type="text" id="entry-name" required placeholder="e.g., Accounts, UpstoX">
+                        </div>
+
+                        <!-- Dynamic Fields Container -->
+                        <div id="dynamic-fields-container">
+                            <!-- Fields will be injected based on category -->
+                        </div>
+
+                        <div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+                            <button type="button" id="btn-cancel-edit" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+                            <button type="submit" class="btn btn-primary" style="flex: 1;">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Folder Modal -->
+    <div id="folder-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2 id="folder-modal-title">New Folder</h2>
+                <button id="btn-close-folder-modal" class="btn-icon"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="folder-form">
+                    <input type="hidden" id="folder-id">
+
+                    <div class="form-group">
+                        <label for="folder-category">Category</label>
+                        <select id="folder-category" required class="form-select">
+                            <option value="passwords">Passwords</option>
+                            <option value="bank">Bank Information</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="folder-title">Folder Name</label>
+                        <input type="text" id="folder-title" required placeholder="e.g., Crd Notes, Social Media">
+                    </div>
+
+                    <div class="form-actions">
+                        <div style="flex: 1;"></div>
+                        <button type="submit" class="btn btn-primary">Save Folder</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Removed Add/Edit Entry Modal as it is now in the Details Pane -->
+
+    <!-- Hidden file input for importing -->
+    <input type="file" id="file-import-input" accept=".enc,.json" style="display: none;">
+
+    <script src="app.js"></script>
+</body>
+
+</html>
